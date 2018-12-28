@@ -1,5 +1,10 @@
 # -*- coding: utf-8 -*-
 import scrapy
+from unicodedata import normalize
+from datetime import datetime
+
+def remover_acentos(txt):
+    return normalize('NFKD', txt).encode('ASCII', 'ignore').decode('ASCII')
 
 class ConsultaDetranSpider(scrapy.Spider):
     ano_global = "";
@@ -29,21 +34,13 @@ class ConsultaDetranSpider(scrapy.Spider):
         #print("Ano: {} Municipio: {}".format(ano, nome_municipio))
         for combustivel in combustiveis:
             valores = response.xpath("//td[text()='{}']/following-sibling::td/text()".format(combustivel)).extract()
-            yield{
-                'ID_MUN': id_municipio,
-                'NME_MUN': nome_municipio,
-                'ANO': ano,
-                'NME_COMB': combustivel,
-                'JAN': valores[0],
-                'FEV': valores[1],
-                'MAR': valores[2],
-                'ABR': valores[3],
-                'MAI': valores[4],
-                'JUN': valores[5],
-                'JUL': valores[6],
-                'AGO': valores[7],
-                'SET': valores[8],
-                'OUT': valores[9],
-                'NOV': valores[10],
-                'DEZ': valores[11]
-            }
+            meses = {'01': valores[0], '02': valores[1], '03': valores[2], '04': valores[3], '05': valores[4], '06': valores[5], '07': valores[6], '08': valores[7], '09': valores[8], '10': valores[9], '11': valores[10], '12': valores[11]}
+
+            for mes in meses:
+                yield{
+                    'ID_MUN': id_municipio,
+                    'NME_MUN': nome_municipio,
+                    'NME_COMB': remover_acentos(combustivel),
+                    'DTA': '{}/{}/{}'.format('01', mes, ano),
+                    'QTD': meses[mes]
+                }
